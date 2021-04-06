@@ -2,3 +2,6 @@
 
 /model/
 /tfjs_model/
+
+*.csv
+.DS_Store
