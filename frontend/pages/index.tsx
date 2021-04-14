@@ -6,8 +6,9 @@ import { processSpamCsv } from "../src/data/process"
 export default function Home() {
 
     const [model, setModel] = useState<BertModel>()
-    const [textToClassify, setTextToClassify] = useState("")
+    const [textToClassify, setTextToClassify] = useState("spam spam spam free free free")
     const [classificationResult, setClassificationResult] = useState("")
+    const [modelTrainState, setModelTrainingState] = useState<ModelTrainingState>(ModelTrainingState.NOT_TRAINED)
 
     useEffect(() => {
         loadModel()
@@ -21,9 +22,13 @@ export default function Home() {
     }
 
     const trainModel = async () => {
+        setModelTrainingState(ModelTrainingState.TRAINING)
+
         const df = await loadCsvFile("http://localhost:3000/spam.csv")
         const trainInput = processSpamCsv(df, model)
-        model.train(trainInput)
+        await model.train(trainInput)
+
+        setModelTrainingState(ModelTrainingState.TRAINED)
     }
 
     const onChangeText = (e) => {
@@ -44,11 +49,28 @@ export default function Home() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen py-2">
-            <button className="bg-red-500 text-white p-2 rounded" onClick={trainModel}>Train!</button>
+            {
+                modelTrainState === ModelTrainingState.NOT_TRAINED && <button className="bg-red-500 text-white p-2 rounded w-20" onClick={trainModel}>Train!</button>
+            }
 
-            <textarea className="m-4 border-black border rounded" onChange={onChangeText} value={textToClassify} />
-            <button className="m-4 bg-red-500 text-white p-2 rounded" onClick={classifyText}>Predict!</button>
-            <p>Classification result: {classificationResult}</p>
+            {
+                modelTrainState === ModelTrainingState.TRAINING && <button className="bg-red-500 text-white p-2 rounded">Model is trained...</button>
+            }
+
+            {
+                modelTrainState === ModelTrainingState.TRAINED && <>
+                    <textarea className="border-black border rounded" onChange={onChangeText} value={textToClassify} />
+                    <button className="mt-2 mb-4 bg-red-500 text-white p-2 rounded" onClick={classifyText}>Predict!</button>
+                    <p>Classification result: {classificationResult}</p>
+                </>
+            }
+
         </div>
     )
+}
+
+enum ModelTrainingState {
+    NOT_TRAINED = "not trained",
+    TRAINING = "training",
+    TRAINED = "trained"
 }
