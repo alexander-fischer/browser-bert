@@ -9,3 +9,7 @@ Use BERT for transfer learning - but just in the browser. Find the article [here
 ## Run NextJS frontend app
 
 `cd frontend && yarn install && yarn dev`
+
+## Demo
+
+https://browser-bert.vercel.app/
