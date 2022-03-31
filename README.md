@@ -4,12 +4,32 @@ Use BERT for transfer learning - but just in the browser. Find the article [here
 
 ## Setup BERT
 
-`pip3 install tensorflow transformers numpy pandas sklearn && python3 setup_bert.py`
+Install dependencies
 
-## Run NextJS frontend app
+`poetry install`
 
-`cd frontend && yarn install && yarn dev`
+Setup BERT model
+
+`poetry run setup_bert`
+
+## Setup Frontend
+
+Install dependencies
+
+`cd frontend && yarn install`
+
+Convert model
+
+`yarn convert_model`
+
+Run frontend
+
+`yarn dev`
 
 ## Demo
 
 https://browser-bert.vercel.app/
+
+## Dataset
+
+Can be found [here](https://github.com/bigmlcom/python/blob/master/data/spam.csv).

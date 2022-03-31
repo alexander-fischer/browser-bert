@@ -1,7 +1,7 @@
 .vscode/
 
-/model/
-/tfjs_model/
+model/
+__pycache__/
 
 *.csv
 .DS_Store

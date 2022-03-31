@@ -1,9 +1,10 @@
 import * as tf from "@tensorflow/tfjs"
+import { FRONTEND_URL } from "../constants"
 import { BertTokenizer, loadTokenizer } from "./tokenizer"
 
 export default class BertModel {
     public inputSize: number
-    public url = "http://localhost:3000/model/model.json"
+    public url = FRONTEND_URL + "/model/model.json"
 
     public bertModel: tf.GraphModel
     public tokenizer: BertTokenizer
@@ -106,7 +107,7 @@ export default class BertModel {
         return predictions
     }
 
-    // Get raw results from bert layer 
+    // Get raw results from bert layer
     private async bertLayerInference(inputs: BertInput[]) {
         const batchSize = inputs.length
         const inputIds = inputs.map((value) => value.inputIds)
@@ -166,14 +167,14 @@ export default class BertModel {
     private async loadBertModel() {
         console.log("Loading model...")
         this.bertModel = await tf.loadGraphModel(this.url)
-        console.log("Model loaded.")
+        console.log("Model loaded")
     }
 
     // Load tokenizer for bert input
     private async loadTokenizer() {
         console.log("Loading tokenizer...")
         this.tokenizer = await loadTokenizer()
-        console.log("Tokenizer loaded.")
+        console.log("Tokenizer loaded")
     }
 }
 

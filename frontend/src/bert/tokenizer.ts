@@ -1,4 +1,5 @@
 import * as tf from "@tensorflow/tfjs"
+import { FRONTEND_URL } from "../constants"
 
 /**
  * Source: https://github.com/tensorflow/tfjs-models/blob/master/qna/src/bert_tokenizer.ts
@@ -12,7 +13,7 @@ export const SEP_INDEX = 102
 export const SEP_TOKEN = "[SEP]"
 export const NFKC_TOKEN = "NFKC"
 
-const vocabUrl = "http://localhost:3000/model/vocab.json"
+const vocabUrl = FRONTEND_URL + "/vocab.json"
 
 class TrieNode {
     parent: TrieNode

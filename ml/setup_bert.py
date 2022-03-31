@@ -47,25 +47,12 @@ def create_model(max_len, classifier_layer=True):
     return model
 
 
-# Model takes 128 tokens as input
-MAX_LEN = 128
-
-# Save model for TFJS
-model_to_save = create_model(MAX_LEN, False)
-model_to_save.save("./model")
-
-# Setup model and tokenizer for python training
-model = create_model(MAX_LEN)
-vocab_file = "./vocab.txt"
-tokenizer = BertTokenizerFast(vocab_file)
-
-
-def tokenize(text):
+def tokenize(text, tokenizer, max_length):
     # Use encoding functionality from transformers lib
     example = tokenizer.encode_plus(
         text,
         add_special_tokens=True,
-        max_length=MAX_LEN,
+        max_length=max_length,
         return_attention_mask=True,
         padding="max_length",
         truncation=True,
@@ -77,7 +64,7 @@ def tokenize(text):
     return input_ids, token_type_ids, attention_masks
 
 
-def prepare_spam_dataset(df):
+def prepare_spam_dataset(df, tokenizer, max_length):
     # Get features and labels from spam data
     features = df["Message"].values
     labels = df["Type"].values
@@ -90,7 +77,7 @@ def prepare_spam_dataset(df):
         feature = features[i]
 
         # Encode example text
-        input_ids, token_type_ids, attention_masks = tokenize(feature)
+        input_ids, token_type_ids, attention_masks = tokenize(feature, tokenizer, max_length)
         input_ids_list.append(input_ids)
         token_type_ids_list.append(token_type_ids)
         attention_mask_list.append(attention_masks)
@@ -102,32 +89,49 @@ def prepare_spam_dataset(df):
     return np.array(input_ids_list), np.array(token_type_ids_list), np.array(attention_mask_list), np.array(label_list).reshape(-1, 1)
 
 
-# Load and split dataset
-spam_file = "./spam.csv"
-spam_df = pd.read_csv(spam_file, sep="\t")
-train_df, test_df = train_test_split(spam_df)
+def run():
+    # Model takes 128 tokens as input
+    MAX_LEN = 128
 
-# Setup training data
-train_input_ids, train_token_type_ids, train_attention_mask, y_train = prepare_spam_dataset(
-    train_df)
+    # Save model for TFJS
+    model_to_save = create_model(MAX_LEN, False)
+    model_to_save.save("./frontend/model")
 
-# Train model
-bert_history = model.fit({
-    "input_ids": train_input_ids,
-    "token_type_ids": train_token_type_ids,
-    "attention_mask": train_attention_mask},
-    y_train,
-    epochs=10
-)
+    # Setup model and tokenizer for python training
+    model = create_model(MAX_LEN)
+    vocab_file = "./ml/vocab.txt"
+    tokenizer = BertTokenizerFast(vocab_file)
 
-# Setup test data
-test_input_ids, test_token_type_ids, test_attention_mask, y_test = prepare_spam_dataset(
-    test_df)
+    # Load and split dataset
+    spam_file = "./ml/spam.csv"
+    spam_df = pd.read_csv(spam_file, sep="\t")
+    train_df, test_df = train_test_split(spam_df)
 
-# Evaluate model with test data
-model.evaluate({
-    "input_ids": test_input_ids,
-    "token_type_ids": test_token_type_ids,
-    "attention_mask": test_attention_mask},
-    y_test
-)
+    # Setup training data
+    train_input_ids, train_token_type_ids, train_attention_mask, y_train = prepare_spam_dataset(
+        train_df, tokenizer, MAX_LEN)
+
+    # Train model
+    bert_history = model.fit({
+        "input_ids": train_input_ids,
+        "token_type_ids": train_token_type_ids,
+        "attention_mask": train_attention_mask},
+        y_train,
+        epochs=10
+    )
+
+    # Setup test data
+    test_input_ids, test_token_type_ids, test_attention_mask, y_test = prepare_spam_dataset(
+        test_df, tokenizer, MAX_LEN)
+
+    # Evaluate model with test data
+    model.evaluate({
+        "input_ids": test_input_ids,
+        "token_type_ids": test_token_type_ids,
+        "attention_mask": test_attention_mask},
+        y_test
+    )
+
+
+if __name__ == "__main__":
+    run()

@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react"
 import BertModel from "../src/bert/model"
-import { loadCsvFile } from "../src/data/load"
 import { processSpamCsv } from "../src/data/process"
+import { usePapaParse } from "react-papaparse"
+import axios from "axios"
 
 export default function Home() {
+    const { readString } = usePapaParse()
 
     const [model, setModel] = useState<BertModel>()
+    const [data, setData] = useState<unknown>()
     const [textToClassify, setTextToClassify] = useState("spam spam spam free free free")
     const [classificationResult, setClassificationResult] = useState("")
     const [modelTrainState, setModelTrainingState] = useState<ModelTrainingState>(ModelTrainingState.NOT_TRAINED)
 
     useEffect(() => {
         loadModel()
+        loadData()
     }, [])
 
     const loadModel = async () => {
@@ -24,8 +28,7 @@ export default function Home() {
     const trainModel = async () => {
         setModelTrainingState(ModelTrainingState.TRAINING)
 
-        const df = await loadCsvFile("http://localhost:3000/spam.csv")
-        const trainInput = processSpamCsv(df, model)
+        const trainInput = processSpamCsv(data, model)
         await model.train(trainInput)
 
         setModelTrainingState(ModelTrainingState.TRAINED)
@@ -35,6 +38,19 @@ export default function Home() {
         const value = e.target.value
         setTextToClassify(value)
     }
+
+    const loadData = async () => {
+        const res = await axios.get("/spam.csv")
+        readString(res.data, {
+            worker: true,
+            header: true,
+            complete: (results) => {
+                console.log("Data loaded")
+                setData(results)
+            },
+        })
+    };
+
 
     const classifyText = async () => {
         if (textToClassify === undefined || textToClassify === "") {
@@ -54,7 +70,7 @@ export default function Home() {
             }
 
             {
-                modelTrainState === ModelTrainingState.TRAINING && <button className="bg-red-500 text-white p-2 rounded">Model is trained...</button>
+                modelTrainState === ModelTrainingState.TRAINING && <button className="bg-red-500 text-white p-2 rounded">Training runs...</button>
             }
 
             {
